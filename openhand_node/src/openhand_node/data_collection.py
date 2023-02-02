@@ -42,7 +42,7 @@ def main():
     df = pd.DataFrame(columns=['Image_Name','Finger_Pos','FT_sensor','FSR_reading'])
 
 
-    finger_name = 'Thumb'
+    finger_name = 'Index'
     
     # Initialise the tacip
     print('Initialising TacTip...')
@@ -59,7 +59,7 @@ def main():
     dobot.client_dash.PayLoad(0.5, 0.005)
     time.sleep(3)
     home = {'x':190, 'y':0, 'z':0, 'r':235}
-    collection_start = {'x':355, 'y':-17, 'z':50, 'r':235}
+    collection_start = {'x':355, 'y':-45, 'z':50, 'r':235}
     dobot.client_move.MovJ(home['x'], home['y'], home['z'], home['r']) # ensure the robot is at home
     time.sleep(10)
     dobot_positions = np.linspace(collection_start['x'], 330, 50)
@@ -70,7 +70,7 @@ def main():
 
     # initialise the Model-O
     T = Model_O('/dev/ttyUSB0', 1,4,3,2,'MX', 0.4, 0.21, -0.1, 0.05)
-    finger_dict ={'Thumb':3,'Right':1,'Left':2}
+    finger_dict ={'Thumb':3,'Middle':2,'Index':1}
     collection_finger = finger_dict[finger_name] # 1 is right, 2 is left, 3 is thumb
     T.reset() # reset the hand
 
@@ -123,6 +123,7 @@ def main():
     T.release() # relax the hand
     thumb_tactip.stop() # stop the tactip
     dobot.client_move.MovJ(home['x'], home['y'], home['z'], home['r']) # return dobot to home pos
+    time.sleep(3)
 
     df.to_csv('data/'+finger_name+'.csv')
 
