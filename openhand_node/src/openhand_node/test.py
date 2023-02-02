@@ -6,8 +6,8 @@ import cv2
 
 def main1():
 
-    home = {'x':200, 'y':0, 'z':0, 'r':235}
-    collection_start = {'x':390, 'y':-17, 'z':35, 'r':235}
+    home = {'x':190, 'y':0, 'z':0, 'r':235}
+    collection_start = {'x':340, 'y':-17, 'z':50, 'r':235}
 
     cont = Dobot_Controller('192.168.1.6')
     cont.client_dash.EnableRobot()

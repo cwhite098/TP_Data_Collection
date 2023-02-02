@@ -58,8 +58,8 @@ class TacTip:
         Function that repeatedly polls the camera for a new frame
         '''
         # grab 1 frame and save it for ssim comparisons
-        #ret, frame = self.vid.read()
-        #self.initial_img = self.process_frame(frame)
+        ret, frame = self.vid.read()
+        self.initial_img = self.process_frame(frame)
 
         # Capture frames from camera 
         while not self.stopped:
