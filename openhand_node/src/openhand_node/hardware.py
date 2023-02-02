@@ -4,6 +4,16 @@ from threading import Thread
 import serial
 import minimalmodbus as mm
 from skimage.metrics import structural_similarity
+from dobot_api import DobotApi, DobotApiDashboard, DobotApiMove
+
+class Dobot_Controller:
+    def __init__(self, ip):
+        
+        self.ip = ip
+
+        self.client_dash = DobotApiDashboard(self.ip, 29999)
+        self.client_move = DobotApiMove(self.ip, 30003)
+        self.client_feed = DobotApi(self.ip, 30004)
 
 
 
@@ -36,7 +46,11 @@ class TacTip:
         self.stopped = False
         
         # Let camera warm up
-        time.sleep(1)
+        time.sleep(3)
+
+        ret, self.frame = self.vid.read()
+        #cv2.imshow('test', self.frame)
+        time.sleep(0.1)
         
         
     def stream(self):
@@ -44,8 +58,8 @@ class TacTip:
         Function that repeatedly polls the camera for a new frame
         '''
         # grab 1 frame and save it for ssim comparisons
-        ret, frame = self.vid.read()
-        self.initial_img = self.process_frame(frame)
+        #ret, frame = self.vid.read()
+        #self.initial_img = self.process_frame(frame)
 
         # Capture frames from camera 
         while not self.stopped:
