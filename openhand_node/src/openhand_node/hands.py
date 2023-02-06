@@ -354,7 +354,7 @@ class GR2(OpenHand):
 
 
 class Model_O(OpenHand):
-	servo_speed = 1.0
+	servo_speed = 0.8
 	max_torque = 0.4
 	amnt_close = 0.5 #default close position
 	max_close = 0.7 #max motor movement from open to close for individual hand
@@ -366,7 +366,7 @@ class Model_O(OpenHand):
 
 	#RESET THE MOTOR MINS FOR FASTER INITIALIZATION
 	motorDir = [-1,1,-1,1] # one finger is opposite due to placement on the openhand base
-	motorMin = [0.0,0.22,0.13,0.27]
+	motorMin = [0.0,0.22,-0.6,0.27]
 	adduct_amount = 0.37
 	motorMax = [motorMin[0]+adduct_amount,motorMin[1]+max_close,motorMin[2]+max_close,motorMin[3]+max_close] #RX and MX motors may use an offset of 0.48 instead of 0.40
 

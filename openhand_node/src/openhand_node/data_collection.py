@@ -15,11 +15,13 @@ def move_to(hand, ft_sensor, finger):
     ft_readings = ft_sensor.read_forces()
     print('Initial forces: ',ft_readings)
     finger_pos = 0
+    count = 0 
 
     detection_offset = 0.13
     ft_sensor.set_zeros()
     # While no change in force reading -> keep moving
-    while ft_readings[2]>=-0.25: 
+    #while ft_readings[2]>=-0.35:
+    while count < 2:
         
         finger_pos += 0.005
         hand.moveMotor(finger, finger_pos)
@@ -29,6 +31,11 @@ def move_to(hand, ft_sensor, finger):
         print(ft_readings[2])
 
         min_point = finger_pos
+        # Should now only detect contact if 2 concurrent loops register a great enough force
+        if ft_readings[2]<=-0.2:
+            count+=1
+        else:
+            count = 0
     
     print('Contact Detected!')
 
@@ -39,8 +46,7 @@ def move_to(hand, ft_sensor, finger):
 def main():
 
     # Initialise the dataframe to store the data being collected
-    df = pd.DataFrame(columns=['Image_Name','Finger_Pos','FT_sensor','FSR_reading'])
-
+    df = pd.DataFrame(columns=['Image_Name','Finger_Pos','FT_sensor'])
 
     finger_name = 'Index'
     
@@ -80,14 +86,16 @@ def main():
 
     for n, j in enumerate(dobot_positions):
 
+        print('Dobot Position Number: ',n)
+
         dobot.client_move.MovJ(j, collection_start['y'], collection_start['z'], collection_start['r'])
-        time.sleep(3)
+        time.sleep(1)
 
         min_finger_pos = move_to(T, ft_sensor, collection_finger)
 
         #min_finger_pos = 0.3 # find this by monitoring ft sensor or ssim?
         max_finger_pos = min_finger_pos + 0.12
-        finger_positions = np.linspace(min_finger_pos,max_finger_pos,100) 
+        finger_positions = np.linspace(min_finger_pos,max_finger_pos,100)
 
         # for hand_pos in hand_pose_list:
         # Could wrap this in another loop to move the hand up/down 
@@ -95,29 +103,27 @@ def main():
             T.moveMotor(collection_finger, pos)
 
             # Collect some data
-            image_name = finger_name+'_'+str(n)+str(i)+'.jpg'
+            image_name = finger_name+'_'+str(n)+'_'+str(i)+'.jpg'
             thumb_tactip.save_image('images/'+finger_name+'/'+image_name)
             
             # Read the F/T sensor
             ft_readings = ft_sensor.read_forces()
             print('Finger Pos: ', pos, 'Force: ', ft_readings[2])
-            
-            # Read the fsr
-            #fsr_reading = fsr.read_sensor()
-            fsr_reading =10
 
-            df2 = pd.DataFrame([[image_name, pos, ft_readings[0], ft_readings[1], ft_readings[2], ft_readings[3], ft_readings[4], ft_readings[5], fsr_reading]],
-                columns=['Image_Name','Finger_Pos', 'fx', 'fy', 'fz', 'tx', 'ty', 'tz','FSR_reading'])
+            df2 = pd.DataFrame([[image_name, pos, ft_readings[0], ft_readings[1], ft_readings[2], ft_readings[3], ft_readings[4], ft_readings[5]]],
+                columns=['Image_Name','Finger_Pos', 'fx', 'fy', 'fz', 'tx', 'ty', 'tz'])
             df = df.append(df2)
 
             time.sleep(0.05)
 
+        print('Resetting Hand...')
+        time.sleep(1)
         # Reset the hand
-        T.reset()
+        #T.reset() # this is the line that breaks it - change to moveMotor()?
+        T.moveMotor(collection_finger, 0)
+        time.sleep(1)
         # Rezero the F/T sensor
         ft_sensor.set_zeros()
-
-
 
 
     T.release() # relax the hand
