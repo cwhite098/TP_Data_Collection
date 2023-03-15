@@ -30,7 +30,7 @@ class TacTip:
         self.process = process
 
         # Open the camera and check its working
-        self.vid = cv2.VideoCapture(video_capture)
+        self.vid = cv2.VideoCapture(video_capture, cv2.CAP_DSHOW)
         if not self.vid.isOpened():
             print("Cannot open camera " + self.name)
             exit()
