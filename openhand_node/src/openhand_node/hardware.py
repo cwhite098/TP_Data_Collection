@@ -16,6 +16,60 @@ class Dobot_Controller:
         self.client_feed = DobotApi(self.ip, 30004)
 
 
+class TacTip2:
+    def __init__(self, width, height, fps, name, thresh_width, thresh_offset, crop, video_capture, process=False, display=True):
+        # Init class vars
+        self.width = width
+        self.height = height
+        self.fps = fps
+        self.name = name
+        self.crop = crop
+        self.display = display
+        self.process = process
+
+        # Open the camera and check its working
+        self.vid = cv2.VideoCapture(video_capture, cv2.CAP_DSHOW)
+        # https://stackoverflow.com/questions/56974772/usb-camera-opencv-videocapture-returns-partial-frames
+        if not self.vid.isOpened():
+            print("Cannot open camera " + self.name)
+            exit()
+        self.vid.set(cv2.CAP_PROP_FPS, self.fps)
+        self.vid.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
+        self.vid.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
+        self.vid.set(cv2.CAP_PROP_BRIGHTNESS, 2)
+        #self.vid.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
+    
+        # params for Gaussian thresholding
+        self.thresh_width = thresh_width
+        self.thresh_offset = thresh_offset
+        
+        self.frame = None
+        self.stopped = False
+        
+        # Let camera warm up
+        time.sleep(3)
+
+        ret, self.frame = self.vid.read()
+        #cv2.imshow('test', self.frame)
+        time.sleep(0.1)
+    
+    def get_frame(self, path):
+
+        for i in range(40):
+            ret, frame = self.vid.read()
+            if not ret:
+                print('Capture failed on dummy frames...')
+        #cv2.imshow('Frame Captured', frame)
+        ret, frame = self.vid.read()
+        if ret:
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            cv2.imwrite(path, frame)
+        else:
+            print('Frame Capture Failed...')
+
+
+
+
 
 class TacTip:
 
@@ -31,12 +85,15 @@ class TacTip:
 
         # Open the camera and check its working
         self.vid = cv2.VideoCapture(video_capture, cv2.CAP_DSHOW)
+        #self.vid.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+        # https://stackoverflow.com/questions/56974772/usb-camera-opencv-videocapture-returns-partial-frames
         if not self.vid.isOpened():
             print("Cannot open camera " + self.name)
             exit()
         self.vid.set(cv2.CAP_PROP_FPS, self.fps)
         self.vid.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
         self.vid.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
+        self.vid.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
     
         # params for Gaussian thresholding
         self.thresh_width = thresh_width
@@ -44,7 +101,8 @@ class TacTip:
         
         self.frame = None
         self.stopped = False
-        
+        self.lock = True
+
         # Let camera warm up
         time.sleep(3)
 
@@ -61,9 +119,17 @@ class TacTip:
         ret, frame = self.vid.read()
         self.initial_img = self.process_frame(frame)
 
+        if not ret:
+            print('Camera is dying...')
+
         # Capture frames from camera 
         while not self.stopped:
-            ret, self.frame = self.vid.read()
+            if self.lock:
+                ret, self.frame = self.vid.read()
+                #time.sleep(1/self.fps)
+                print('Getting new frame!!!!!!!!!')
+                if not ret:
+                    print('AHAHAHAAHAHA')
             
 
     def process_and_display(self):

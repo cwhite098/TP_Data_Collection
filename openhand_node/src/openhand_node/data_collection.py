@@ -3,7 +3,7 @@ from gc import collect
 from hands import Model_O
 import time
 import numpy as np
-from hardware import TacTip, FSR, FTsensor, Dobot_Controller
+from hardware import TacTip, FSR, FTsensor, Dobot_Controller, TacTip2
 import pandas as pd
 
 
@@ -48,15 +48,18 @@ def main():
     # Initialise the dataframe to store the data being collected
     df = pd.DataFrame(columns=['Image_Name','Finger_Pos','FT_sensor'])
 
-    finger_name = 'Thumb'
+    finger_name = 'Middle'
     
     # Initialise the tacip
     print('Initialising TacTip...')
-    thumb_tactip = TacTip(320,240,40, finger_name, 13, -25, [110,0,225,240], 0, process=True, display=True)
-    thumb_tactip.start_cap()
+    #thumb_tactip = TacTip(320,240,40, finger_name, 13, -25, [110,0,225,240], 0, process=False, display=True)
+    thumb_tactip = TacTip2(320,240,40, finger_name, 13, -25, [110,0,225,240], 0, process=False, display=True)
+
+    #thumb_tactip.start_cap()
     time.sleep(1)
-    thumb_tactip.start_processing_display()
-    thumb_tactip.save_image('images/'+finger_name+'/'+'default.jpg')
+    #thumb_tactip.start_processing_display()
+    #thumb_tactip.save_image('images/'+finger_name+'/'+'default.jpg')
+    thumb_tactip.get_frame('images/'+finger_name+'/'+'default.jpg')
 
     # Initialise the Dobot
     dobot = Dobot_Controller('192.168.1.6')
@@ -77,7 +80,7 @@ def main():
     ft_sensor.set_zeros()
 
     # initialise the Model-O
-    T = Model_O('COM12', 1,4,3,2,'MX', 0.4, 0.21, -0.1, 0.05)
+    T = Model_O('COM12', 1,4,3,2,'MX', 0.4, 0.21, -0.21, 0.05)
     finger_dict ={'Thumb':3,'Middle':2,'Index':1}
     collection_finger = finger_dict[finger_name] # 1 is right, 2 is left, 3 is thumb
     T.reset() # reset the hand
@@ -108,10 +111,12 @@ def main():
             for i, pos in enumerate(finger_positions):
                 T.moveMotor(collection_finger, pos)
                 time.sleep(0.4)
+                #thumb_tactip.lock = False
                 # Collect some data
                 image_name = finger_name+'_'+str(no)+'_'+str(n)+'_'+str(i)+'.jpg'
-                thumb_tactip.save_image('images/'+finger_name+'/'+image_name)
-                
+                #thumb_tactip.save_image('images/'+finger_name+'/'+image_name)
+                thumb_tactip.get_frame('images/'+finger_name+'/'+image_name)
+
                 # Read the F/T sensor
                 ft_readings = ft_sensor.read_forces()
                 print('Finger Pos: ', pos, 'Force: ', np.linalg.norm(ft_readings[:3]))
@@ -122,6 +127,9 @@ def main():
 
                 time.sleep(0.2)
                 T.moveMotor(collection_finger, min_finger_pos-0.1) # remove finger
+
+                #thumb_tactip.lock = True
+
                 time.sleep(0.5)
                 ft_sensor.set_zeros()
                 time.sleep(1)
